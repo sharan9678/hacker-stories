@@ -1,4 +1,14 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+
+const useSemiPersistentState = (key, initialState) => {
+  const [value, setValue] = useState(localStorage.getItem(key) || initialState);
+
+  useEffect(() => {
+    localStorage.setItem(key, value);
+  }, [value, key]);
+
+  return [value, setValue];
+};
 
 const App = () => {
   const stories = [
@@ -20,7 +30,7 @@ const App = () => {
     },
   ];
 
-  const [searchTerm, setSearchTerm] = useState("React");
+  const [searchTerm, setSearchTerm] = useSemiPersistentState("search", "React");
 
   const handleSearch = (event) => {
     setSearchTerm(event.target.value);
@@ -33,33 +43,44 @@ const App = () => {
   return (
     <div>
       <h1>My Hacker Stories</h1>
-      <Search search={searchTerm} onSearch={handleSearch} />
+      <InputWithLabel
+        id="search"
+        value={searchTerm}
+        onInputChange={handleSearch}
+      >
+        <strong>Search</strong>
+      </InputWithLabel>
       <hr />
       <List list={searchedStories} />
     </div>
   );
 };
 
-const Search = ({ search, onSearch }) => {
-  return (
-    <div>
-      <label htmlFor="search">Search: </label>
-      <input type="text" id="search" value={search} onChange={onSearch} />
-    </div>
-  );
-};
+const InputWithLabel = ({
+  id,
+  value,
+  type = "text",
+  onInputChange,
+  children,
+}) => (
+  <>
+    <label htmlFor={id}>{children}</label>
+    &nbsp;
+    <input id={id} type={type} value={value} onChange={onInputChange} />
+  </>
+);
 
 const List = ({ list }) =>
-  list.map((item) => <Item key={item.objectID} item={item} />);
+  list.map(({ objectID, ...item }) => <Item key={objectID} {...item} />);
 
-const Item = ({ item: { title, url, author, num_comments, points } }) => (
+const Item = ({ title, url, author, num_comments, points }) => (
   <div>
     <span>
-      <a href={url}>{title}</a>
+      <a href={url}>{title} </a>
     </span>
-    <span>{author}</span>
-    <span>{num_comments}</span>
-    <span>{points}</span>
+    <span> {author} </span>
+    <span> {num_comments} </span>
+    <span> {points} </span>
   </div>
 );
 
